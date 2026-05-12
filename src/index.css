@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+  
+  --color-elegant-gold: #c5a059;
+  --color-elegant-ink: #1a1a1a;
+  --color-elegant-paper: #f5f2ed;
+  --color-elegant-muted: #8e8e8e;
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/40 backdrop-blur-[120px] border border-white/20 shadow-2xl;
+  }
+
+  .glass-dropdown {
+    @apply bg-white/100 backdrop-blur-[200px] border border-white/30 shadow-2xl;
+  }
+  
+  .glass-card {
+    @apply bg-white/60 backdrop-blur-xl border border-white/30 shadow-sm hover:shadow-md transition-all duration-500;
+  }
+
+  .bg-animate {
+    background: radial-gradient(circle at 50% 50%, #f5f2ed 0%, #e5e0d8 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bg-blob {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(197, 160, 89, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .writing-vertical-rl {
+    writing-mode: vertical-rl;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+
+body {
+  @apply bg-elegant-paper text-elegant-ink font-sans antialiased;
+  min-height: 100%;
+}
+
+html {
+  height: 100%;
+}
+
+h1, h2, h3, h4 {
+  @apply font-serif;
+}
