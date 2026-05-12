@@ -693,11 +693,11 @@ ${priceLine}${dateLine}--------------------------
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                   <input 
                     type="number" 
-                    min="1"
+                    min="50"
                     value={currentBulkItem.quantity}
                     onChange={e => setCurrentBulkItem({...currentBulkItem, quantity: e.target.value})}
                     className="flex-1 bg-transparent border-b border-elegant-gold/20 px-2 py-3.5 md:px-4 md:py-5 focus:outline-none focus:border-elegant-gold transition-all font-light tracking-wide placeholder:text-elegant-ink/20 text-[13px] md:text-base" 
-                    placeholder="Count (e.g., 50)"
+                    placeholder="Min. 50 pieces"
                   />
                   <button
                     type="button"
@@ -706,9 +706,14 @@ ${priceLine}${dateLine}--------------------------
                         toast.error("Please select a flavor and enter a quantity.");
                         return;
                       }
+                      const qty = parseInt(currentBulkItem.quantity as string);
+                      if (qty < 50) {
+                        toast.error("Minimum quantity for bulk orders is 50 pieces.");
+                        return;
+                      }
                       setBulkFormData({
                         ...bulkFormData,
-                        items: [...bulkFormData.items, { flavor: currentBulkItem.flavor, quantity: parseInt(currentBulkItem.quantity as string) }]
+                        items: [...bulkFormData.items, { flavor: currentBulkItem.flavor, quantity: qty }]
                       });
                       setCurrentBulkItem({ flavor: '', quantity: '' });
                     }}
