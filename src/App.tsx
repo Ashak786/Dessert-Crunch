@@ -64,6 +64,33 @@ export default function App() {
       return;
     }
 
+const checkStatus = () => {
+  try {
+    const now = new Date();
+    const istDate = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    const currentHour = istDate.getHours();
+    
+    // THIS IS THE LINE: 17 = 5 PM, 23 = 11 PM
+    const isOpen = currentHour >= 17 && currentHour < 23; 
+    
+    setIsStoreOpen(isOpen);
+
+    // Logic to calculate the "opens/closes in" timer
+    let target = new Date(istDate);
+    if (isOpen) {
+      target.setHours(23, 0, 0, 0); // Target: 11 PM (Closing)
+    } else {
+      if (currentHour >= 23) {
+        target.setDate(target.getDate() + 1);
+      }
+      target.setHours(17, 0, 0, 0); // Target: 5 PM (Opening)
+    }
+    // ... countdown calculation ...
+  } catch (e) {
+    console.error("Timer error:", e);
+  }
+};
+    
     setCart(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {
