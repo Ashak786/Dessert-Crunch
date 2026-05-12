@@ -8,6 +8,8 @@ import {
   MapPin, 
   Menu as MenuIcon,
   CheckCircle2,
+  Clock,
+  Timer,
   Cookie,
   UtensilsCrossed,
   Users,
@@ -54,43 +56,60 @@ export default function App() {
   const bulkRef = useRef<HTMLElement>(null);
   const testimonialsRef = useRef<HTMLElement>(null);
 
+  const [isStoreOpen, setIsStoreOpen] = useState(false);
+  const [timeToNextStatus, setTimeToNextStatus] = useState('');
+
+  useEffect(() => {
+    const checkStatus = () => {
+      try {
+        const now = new Date();
+        const istDate = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+        const currentHour = istDate.getHours();
+        const isOpen = currentHour >= 17 && currentHour < 23;
+        setIsStoreOpen(isOpen);
+
+        let target = new Date(istDate);
+        if (isOpen) {
+          // If open, target is closing time (11 PM)
+          target.setHours(23, 0, 0, 0);
+        } else {
+          // If closed, target is next opening time (5 PM)
+          if (currentHour >= 23) {
+            target.setDate(target.getDate() + 1);
+          }
+          target.setHours(17, 0, 0, 0);
+        }
+
+        const diff = target.getTime() - istDate.getTime();
+        const h = Math.floor(diff / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        setTimeToNextStatus(`${h}h ${m}m${h === 0 ? ` ${s}s` : ''}`);
+      } catch (e) {
+        console.error("Timer error:", e);
+      }
+    };
+
+    checkStatus();
+    const timer = setInterval(checkStatus, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const addToCart = (item: MenuItem) => {
+    if (!isStoreOpen) {
+      toast.error("Ordering is currently closed. We open at 5 PM IST!");
+      return;
+    }
     const existing = cart.find(i => i.id === item.id);
     if (existing && existing.quantity >= 5) {
       setShowBulkPopup(true);
       return;
     }
 
-const checkStatus = () => {
-  try {
-    const now = new Date();
-    const istDate = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-    const currentHour = istDate.getHours();
-    
-    // THIS IS THE LINE: 17 = 5 PM, 23 = 11 PM
-    const isOpen = currentHour >= 17 && currentHour < 23; 
-    
-    setIsStoreOpen(isOpen);
-
-    // Logic to calculate the "opens/closes in" timer
-    let target = new Date(istDate);
-    if (isOpen) {
-      target.setHours(23, 0, 0, 0); // Target: 11 PM (Closing)
-    } else {
-      if (currentHour >= 23) {
-        target.setDate(target.getDate() + 1);
-      }
-      target.setHours(17, 0, 0, 0); // Target: 5 PM (Opening)
-    }
-    // ... countdown calculation ...
-  } catch (e) {
-    console.error("Timer error:", e);
-  }
-};
-    
     setCart(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {
@@ -115,6 +134,10 @@ const checkStatus = () => {
   };
 
   const handleCheckout = async () => {
+    if (!isStoreOpen) {
+      toast.error("Ordering is currently closed. We open at 5 PM IST!");
+      return;
+    }
     if (checkoutStep === 1) {
       if (!formData.name || !formData.address) {
         toast.error("Please fill in all details");
@@ -453,14 +476,16 @@ ${priceLine}${dateLine}--------------------------
           <Cookie className="text-elegant-gold w-7 h-7" />
           <span className="text-2xl font-serif font-medium tracking-tight text-elegant-ink">Dessert & Crunch</span>
         </div>
-        <nav className="flex gap-10 font-sans text-[20px] uppercase tracking-[0.2em] font-medium text-elegant-ink/60 items-center">
+        <div className="flex items-center gap-10">
+          <nav className="flex gap-10 font-sans text-[20px] uppercase tracking-[0.2em] font-medium text-elegant-ink/60 items-center">
           <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-elegant-gold transition-colors">Home</button>
           <button onClick={() => scrollTo(menuRef)} className="hover:text-elegant-gold transition-colors">Menu</button>
           <button onClick={() => scrollTo(bulkRef)} className="hover:text-elegant-gold transition-colors">Bulk</button>
           <button onClick={() => scrollTo(aboutRef)} className="hover:text-elegant-gold transition-colors">About</button>
         </nav>
-        <button 
-          onClick={() => setIsCartOpen(true)}
+      </div>
+      <button 
+        onClick={() => setIsCartOpen(true)}
           className="relative border border-elegant-gold/30 px-8 py-2.5 rounded-full text-elegant-ink flex items-center gap-3 hover:bg-elegant-gold hover:text-white transition-all text-sm font-bold uppercase tracking-widest shadow-sm"
         >
           <ShoppingBag size={18} />
@@ -527,6 +552,7 @@ ${priceLine}${dateLine}--------------------------
           cart={cart} 
           addToCart={addToCart} 
           updateQuantity={updateQuantity} 
+          isStoreOpen={isStoreOpen}
         />
       </section>
 
@@ -925,10 +951,16 @@ ${priceLine}${dateLine}--------------------------
                     <span className="text-3xl font-serif font-medium">₹{totalPrice}</span>
                   </div>
                   <button 
+                    disabled={!isStoreOpen}
                     onClick={() => setIsCheckoutOpen(true)}
-                    className="w-full bg-elegant-ink text-white py-5 rounded-xl text-xs uppercase tracking-[0.3em] font-bold shadow-xl hover:bg-elegant-gold transition-all"
+                    className={cn(
+                      "w-full py-5 rounded-xl text-xs uppercase tracking-[0.3em] font-bold shadow-xl transition-all",
+                      isStoreOpen 
+                        ? "bg-elegant-ink text-white hover:bg-elegant-gold" 
+                        : "bg-elegant-ink/10 text-elegant-ink/40 cursor-not-allowed shadow-none"
+                    )}
                   >
-                    Proceed to Checkout
+                    {isStoreOpen ? "Proceed to Checkout" : "Kitchen Opens at 5 PM"}
                   </button>
                 </div>
               )}
